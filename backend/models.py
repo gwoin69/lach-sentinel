@@ -1,5 +1,5 @@
 from datetime import datetime, date as date_type
-from sqlalchemy import Integer, Float, String, Boolean, DateTime, Date, Text, ForeignKey
+from sqlalchemy import Integer, Float, String, Boolean, DateTime, Date, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.database import Base
 
@@ -15,6 +15,7 @@ class Metric(Base):
 
 class MetricHourly(Base):
     __tablename__ = "metrics_hourly"
+    __table_args__ = (UniqueConstraint("type", "hour"),)
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     hour: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
     type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
@@ -25,6 +26,7 @@ class MetricHourly(Base):
 
 class MetricDaily(Base):
     __tablename__ = "metrics_daily"
+    __table_args__ = (UniqueConstraint("type", "day"),)
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     day: Mapped[date_type] = mapped_column(Date, nullable=False, index=True)
     type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)

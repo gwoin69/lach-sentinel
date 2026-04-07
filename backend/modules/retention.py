@@ -22,13 +22,18 @@ def downsample_hourly(db: Session) -> None:
                MAX(value) AS max
         FROM metrics
         WHERE timestamp < :cutoff
+          AND strftime('%Y-%m-%dT%H:00:00', timestamp) NOT IN (
+              SELECT strftime('%Y-%m-%dT%H:00:00', hour) FROM metrics_hourly WHERE type = metrics.type
+          )
         GROUP BY type, strftime('%Y-%m-%dT%H:00:00', timestamp)
     """), {"cutoff": cutoff}).fetchall()
 
     for row in rows:
         hour_dt = datetime.fromisoformat(row.hour).replace(tzinfo=timezone.utc)
-        if not db.query(MetricHourly).filter_by(type=row.type, hour=hour_dt).first():
-            db.add(MetricHourly(hour=hour_dt, type=row.type, avg=row.avg, min=row.min, max=row.max))
+        db.execute(text("""
+            INSERT OR IGNORE INTO metrics_hourly (hour, type, avg, min, max)
+            VALUES (:hour, :type, :avg, :min, :max)
+        """), {"hour": hour_dt.isoformat(), "type": row.type, "avg": row.avg, "min": row.min, "max": row.max})
     db.commit()
     logger.debug("downsample_hourly: %d rows", len(rows))
 
@@ -49,8 +54,10 @@ def downsample_daily(db: Session) -> None:
 
     for row in rows:
         day_dt = datetime.strptime(row.day, "%Y-%m-%d").date()
-        if not db.query(MetricDaily).filter_by(type=row.type, day=day_dt).first():
-            db.add(MetricDaily(day=day_dt, type=row.type, avg=row.avg, min=row.min, max=row.max))
+        db.execute(text("""
+            INSERT OR IGNORE INTO metrics_daily (day, type, avg, min, max)
+            VALUES (:day, :type, :avg, :min, :max)
+        """), {"day": day_dt.isoformat(), "type": row.type, "avg": row.avg, "min": row.min, "max": row.max})
     db.commit()
     logger.debug("downsample_daily: %d rows", len(rows))
 
@@ -66,6 +73,8 @@ def purge_old_metrics(db: Session) -> None:
 
 
 def run_retention_job(db: Session) -> None:
-    downsample_hourly(db)
-    downsample_daily(db)
-    purge_old_metrics(db)
+    for step in (downsample_hourly, downsample_daily, purge_old_metrics):
+        try:
+            step(db)
+        except Exception:
+            logger.error("Retention step %s failed", step.__name__, exc_info=True)
