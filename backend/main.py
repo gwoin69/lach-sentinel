@@ -27,18 +27,20 @@ async def lifespan(app: FastAPI):
         # Seed config par défaut si vide
         from backend.models import ConfigEntry
         db = SessionLocal()
-        if not db.query(ConfigEntry).first():
-            defaults = {
-                "nmap_range": settings.nmap_range,
-                "nmap_interval": str(settings.nmap_interval),
-                "metrics_interval": str(settings.metrics_interval),
-                "UNRAID_HOST": settings.unraid_host,
-                "UNRAID_API_PORT": str(settings.unraid_api_port),
-            }
-            for k, v in defaults.items():
-                db.add(ConfigEntry(key=k, value=v))
-            db.commit()
-        db.close()
+        try:
+            if not db.query(ConfigEntry).first():
+                defaults = {
+                    "nmap_range": settings.nmap_range,
+                    "nmap_interval": str(settings.nmap_interval),
+                    "metrics_interval": str(settings.metrics_interval),
+                    "UNRAID_HOST": settings.unraid_host,
+                    "UNRAID_API_PORT": str(settings.unraid_api_port),
+                }
+                for k, v in defaults.items():
+                    db.add(ConfigEntry(key=k, value=v))
+                db.commit()
+        finally:
+            db.close()
 
         monitor = UnraidMonitor(
             host=settings.unraid_host,
@@ -68,7 +70,9 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             await websocket.receive_text()
-    except WebSocketDisconnect:
+    except (WebSocketDisconnect, Exception):
+        pass
+    finally:
         ws_manager.disconnect(websocket)
 
 

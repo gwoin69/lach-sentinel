@@ -1,6 +1,10 @@
+import asyncio
 import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+
+from backend.models import Metric
+from sqlalchemy import func
 
 logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler()
@@ -11,12 +15,17 @@ def setup_scheduler(settings, db_factory, unraid_monitor, nmap_scanner, retentio
         db = db_factory()
         try:
             await unraid_monitor.collect(db)
-            from backend.models import Metric
-            from sqlalchemy import desc
-            latest: dict[str, float] = {}
-            for m in db.query(Metric).order_by(desc(Metric.timestamp)).limit(20).all():
-                if m.type not in latest:
-                    latest[m.type] = m.value
+            subq = (
+                db.query(Metric.type, func.max(Metric.timestamp).label("max_ts"))
+                .group_by(Metric.type)
+                .subquery()
+            )
+            latest_metrics = (
+                db.query(Metric)
+                .join(subq, (Metric.type == subq.c.type) & (Metric.timestamp == subq.c.max_ts))
+                .all()
+            )
+            latest = {m.type: m.value for m in latest_metrics}
             await ws_manager.broadcast({"type": "metrics_update", "data": latest})
         finally:
             db.close()
@@ -24,7 +33,8 @@ def setup_scheduler(settings, db_factory, unraid_monitor, nmap_scanner, retentio
     async def run_nmap():
         db = db_factory()
         try:
-            nmap_scanner.scan(db)
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, nmap_scanner.scan, db)
         finally:
             db.close()
 
