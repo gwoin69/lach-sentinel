@@ -1,0 +1,83 @@
+<h2>Architecture — lach-sentinel</h2>
+<p class="subtitle">Un seul conteneur Docker · FastAPI + Vue.js + SQLite</p>
+
+<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:24px;">
+
+  <!-- Conteneur Docker -->
+  <div style="flex:1;min-width:340px;border:2px solid #4f8ef7;border-radius:12px;padding:20px;background:rgba(79,142,247,0.06)">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#4f8ef7;margin-bottom:12px;font-weight:700;">Docker Container · lach-sentinel</div>
+
+    <!-- Vue.js -->
+    <div style="background:rgba(66,184,131,0.12);border:1px solid #42b883;border-radius:8px;padding:12px;margin-bottom:12px;">
+      <div style="font-weight:700;color:#42b883;margin-bottom:6px;">Vue.js SPA (Vite)</div>
+      <div style="font-size:13px;color:#ccc;line-height:1.6;">
+        Dashboard temps réel · Gestion hôtes/services<br>
+        Topology réseau · Config scans · Masquage widgets
+      </div>
+    </div>
+
+    <!-- FastAPI -->
+    <div style="background:rgba(0,188,212,0.1);border:1px solid #00bcd4;border-radius:8px;padding:12px;margin-bottom:12px;">
+      <div style="font-weight:700;color:#00bcd4;margin-bottom:8px;">FastAPI (Python)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:8px;">
+          <div style="color:#fff;font-weight:600;">REST API</div>
+          <div style="color:#aaa;">CRUD hôtes, config, métriques historiques</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:8px;">
+          <div style="color:#fff;font-weight:600;">WebSocket</div>
+          <div style="color:#aaa;">Push temps réel vers le dashboard</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:8px;">
+          <div style="color:#fff;font-weight:600;">Unraid Monitor</div>
+          <div style="color:#aaa;">CPU, RAM, disques, conteneurs, VMs</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:8px;">
+          <div style="color:#fff;font-weight:600;">Nmap Scanner</div>
+          <div style="color:#aaa;">OS, MAC, Vendor, NSE scripts</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:8px;">
+          <div style="color:#fff;font-weight:600;">APScheduler</div>
+          <div style="color:#aaa;">Tâches planifiées + downsampling SQLite</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:8px;">
+          <div style="color:#fff;font-weight:600;">Alert Engine</div>
+          <div style="color:#aaa;font-style:italic;">Stub v2 (Telegram, Email…)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SQLite -->
+    <div style="background:rgba(255,193,7,0.1);border:1px solid #ffc107;border-radius:8px;padding:12px;">
+      <div style="font-weight:700;color:#ffc107;margin-bottom:6px;">SQLite</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:12px;">
+        <span style="background:rgba(255,255,255,0.07);border-radius:4px;padding:4px 8px;">metrics (brutes 7j)</span>
+        <span style="background:rgba(255,255,255,0.07);border-radius:4px;padding:4px 8px;">metrics_hourly (3m)</span>
+        <span style="background:rgba(255,255,255,0.07);border-radius:4px;padding:4px 8px;">metrics_daily (1an)</span>
+        <span style="background:rgba(255,255,255,0.07);border-radius:4px;padding:4px 8px;">hosts</span>
+        <span style="background:rgba(255,255,255,0.07);border-radius:4px;padding:4px 8px;">scan_results</span>
+        <span style="background:rgba(255,255,255,0.07);border-radius:4px;padding:4px 8px;">services</span>
+        <span style="background:rgba(255,255,255,0.07);border-radius:4px;padding:4px 8px;">config</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Externes -->
+  <div style="display:flex;flex-direction:column;gap:16px;min-width:180px;justify-content:center;">
+    <div style="border:1px solid #555;border-radius:8px;padding:14px;text-align:center;">
+      <div style="font-weight:700;margin-bottom:4px;">Unraid API</div>
+      <div style="font-size:12px;color:#aaa;">:7443 (local)</div>
+    </div>
+    <div style="text-align:center;color:#4f8ef7;font-size:20px;">⟷</div>
+    <div style="border:1px solid #555;border-radius:8px;padding:14px;text-align:center;">
+      <div style="font-weight:700;margin-bottom:4px;">Réseau local</div>
+      <div style="font-size:12px;color:#aaa;">Nmap scans</div>
+    </div>
+    <div style="text-align:center;color:#4f8ef7;font-size:20px;">⟷</div>
+    <div style="border:1px dashed #555;border-radius:8px;padding:14px;text-align:center;opacity:0.6;">
+      <div style="font-weight:700;margin-bottom:4px;">Notifs v2</div>
+      <div style="font-size:12px;color:#aaa;">Telegram / Email</div>
+    </div>
+  </div>
+
+</div>

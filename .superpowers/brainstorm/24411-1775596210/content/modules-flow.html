@@ -1,0 +1,94 @@
+<h2>Modules & flux de données</h2>
+<p class="subtitle">Comment les données circulent dans lach-sentinel</p>
+
+<div style="display:flex;flex-direction:column;gap:16px;margin-top:20px;">
+
+  <!-- Collecte -->
+  <div style="display:flex;gap:12px;align-items:stretch;">
+    <div style="width:120px;background:rgba(79,142,247,0.1);border:1px solid #4f8ef7;border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:center;text-align:center;">
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;color:#4f8ef7;font-weight:700;">Collecte</div>
+        <div style="font-size:12px;color:#aaa;margin-top:4px;">APScheduler</div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;gap:8px;">
+      <div style="flex:1;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;">
+        <div style="font-weight:700;color:#00bcd4;font-size:13px;margin-bottom:6px;">Unraid Monitor</div>
+        <div style="font-size:12px;color:#aaa;line-height:1.6;">
+          Interroge l'API Unraid toutes les <strong style="color:#fff;">60s</strong><br>
+          → CPU, RAM, températures, uptime<br>
+          → Disques, parité, shares<br>
+          → Conteneurs Docker (état + stats)<br>
+          → VMs (état + ressources)
+        </div>
+      </div>
+      <div style="flex:1;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;">
+        <div style="font-weight:700;color:#42b883;font-size:13px;margin-bottom:6px;">Nmap Scanner</div>
+        <div style="font-size:12px;color:#aaa;line-height:1.6;">
+          Scan planifié <strong style="color:#fff;">(fréquence réglable)</strong><br>
+          → Découverte hôtes actifs<br>
+          → OS fingerprinting<br>
+          → MAC + Vendor lookup<br>
+          → NSE scripts configurables<br>
+          → Ports ouverts + services
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flèche -->
+  <div style="text-align:center;font-size:22px;color:#555;">↓</div>
+
+  <!-- Persistance -->
+  <div style="display:flex;gap:12px;align-items:stretch;">
+    <div style="width:120px;background:rgba(255,193,7,0.1);border:1px solid #ffc107;border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:center;text-align:center;">
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;color:#ffc107;font-weight:700;">Persistance</div>
+        <div style="font-size:12px;color:#aaa;margin-top:4px;">SQLite</div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;gap:8px;">
+      <div style="flex:1;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px;font-size:12px;">
+        <div style="color:#ffc107;font-weight:700;margin-bottom:6px;">metrics / metrics_hourly / metrics_daily</div>
+        <div style="color:#aaa;">Downsampling auto via APScheduler<br>Brut 7j → Horaire 3m → Journalier 1an</div>
+      </div>
+      <div style="flex:1;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px;font-size:12px;">
+        <div style="color:#ffc107;font-weight:700;margin-bottom:6px;">hosts / services / scan_results</div>
+        <div style="color:#aaa;">Hôtes découverts par Nmap<br>Modifiables manuellement via l'UI<br>Tags, notes, monitoring on/off</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flèche -->
+  <div style="text-align:center;font-size:22px;color:#555;">↓</div>
+
+  <!-- Exposition -->
+  <div style="display:flex;gap:12px;align-items:stretch;">
+    <div style="width:120px;background:rgba(66,184,131,0.1);border:1px solid #42b883;border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:center;text-align:center;">
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;color:#42b883;font-weight:700;">Exposition</div>
+        <div style="font-size:12px;color:#aaa;margin-top:4px;">FastAPI</div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;gap:8px;">
+      <div style="flex:1;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px;font-size:12px;">
+        <div style="color:#42b883;font-weight:700;margin-bottom:6px;">REST API <span style="color:#555;font-weight:400;">/api/v1/…</span></div>
+        <div style="color:#aaa;">Historique métriques, CRUD hôtes/services<br>Config scans, paramètres globaux</div>
+      </div>
+      <div style="flex:1;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px;font-size:12px;">
+        <div style="color:#42b883;font-weight:700;margin-bottom:6px;">WebSocket <span style="color:#555;font-weight:400;">/ws</span></div>
+        <div style="color:#aaa;">Push toutes les 5s vers le dashboard<br>Métriques live + alertes futures</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flèche -->
+  <div style="text-align:center;font-size:22px;color:#555;">↓</div>
+
+  <!-- UI -->
+  <div style="background:rgba(79,142,247,0.07);border:1px solid #4f8ef7;border-radius:8px;padding:14px;text-align:center;">
+    <span style="font-weight:700;color:#4f8ef7;">Vue.js SPA</span>
+    <span style="color:#aaa;font-size:13px;margin-left:12px;">Dashboard Sidebar+Widgets · Gestion hôtes · Config · Topology réseau</span>
+  </div>
+
+</div>
