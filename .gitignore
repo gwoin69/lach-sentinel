@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Env
+.env
+
+# Data
+data/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Docker
+*.log
+
+# Superpowers brainstorm (mockups locaux)
+.superpowers/
+
+# Claude
+.claude/settings.local.json
+
+# DB locale
+*.db
