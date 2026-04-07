@@ -87,3 +87,19 @@ def test_scan_creates_completed_scan_result(session):
     assert result is not None
     assert result.status == "completed"
     assert result.range == "192.168.111.0/24"
+
+
+def test_scan_failed_on_nmap_error(session):
+    scanner = NmapScanner(network_range="192.168.111.0/24")
+    with patch(
+        "backend.modules.nmap_scanner.nmap.PortScanner",
+        side_effect=Exception("nmap not found"),
+    ):
+        result = scanner.scan(session)
+    assert result is not None
+    assert result.status == "failed"
+    assert result.finished_at is not None
+    # The ScanResult row must be persisted in the database
+    db_result = session.query(ScanResult).filter_by(id=result.id).first()
+    assert db_result is not None
+    assert db_result.status == "failed"

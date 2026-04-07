@@ -24,6 +24,7 @@ def parse_nmap_host(ip: str, host_data: dict) -> dict:
     os_name = osmatches[0]["name"] if osmatches else None
 
     services = []
+    # v1: TCP only — UDP scanning is not supported in this version
     for port, port_data in host_data.get("tcp", {}).items():
         product = port_data.get("product", "")
         version = port_data.get("version", "")
@@ -104,7 +105,8 @@ class NmapScanner:
             logger.info("Nmap scan completed: %d hosts on %s", len(found_ips), self.network_range)
 
         except Exception as exc:
-            logger.error("Nmap scan failed: %s", exc)
+            logger.error("Nmap scan failed: %s", exc, exc_info=True)
+            db.rollback()
             scan_record.status = "failed"
             scan_record.finished_at = datetime.now(timezone.utc)
             db.commit()
