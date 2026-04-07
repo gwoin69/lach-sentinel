@@ -1,0 +1,21 @@
+services:
+  lach-sentinel:
+    build: .
+    container_name: lach-sentinel
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./data:/data
+    environment:
+      - UNRAID_HOST=192.168.111.253
+      - UNRAID_API_PORT=7443
+      - UNRAID_API_KEY=${UNRAID_API_KEY}
+      - NMAP_RANGE=192.168.111.0/24
+      - NMAP_INTERVAL=3600
+      - METRICS_INTERVAL=60
+      - WS_PUSH_INTERVAL=5
+      - TZ=Europe/Paris
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
