@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, timedelta
 from typing import Literal
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
@@ -12,11 +12,17 @@ router = APIRouter(prefix="/metrics", tags=["metrics"])
 
 @router.get("/current")
 def get_current_metrics(db: Session = Depends(get_db)) -> dict:
-    latest: dict[str, float] = {}
-    for row in db.query(Metric).order_by(desc(Metric.timestamp)).limit(100).all():
-        if row.type not in latest:
-            latest[row.type] = row.value
-    return latest
+    subq = (
+        db.query(Metric.type, func.max(Metric.timestamp).label("max_ts"))
+        .group_by(Metric.type)
+        .subquery()
+    )
+    rows = (
+        db.query(Metric)
+        .join(subq, (Metric.type == subq.c.type) & (Metric.timestamp == subq.c.max_ts))
+        .all()
+    )
+    return {m.type: m.value for m in rows}
 
 
 @router.get("/history")

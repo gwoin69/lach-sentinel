@@ -14,4 +14,7 @@ def get_vms(db: Session = Depends(get_db)) -> list[dict]:
     row = db.query(Metric).filter(
         Metric.type == "vms", Metric.meta.isnot(None)
     ).order_by(desc(Metric.timestamp)).first()
-    return json.loads(row.meta) if row else []
+    try:
+        return json.loads(row.meta) if row else []
+    except (json.JSONDecodeError, TypeError):
+        return []
