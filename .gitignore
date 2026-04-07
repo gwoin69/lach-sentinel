@@ -27,3 +27,6 @@ frontend/dist/
 
 # DB locale
 *.db
+
+# Worktrees
+.worktrees/
