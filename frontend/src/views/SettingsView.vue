@@ -4,6 +4,7 @@
     <div class="section"><h2>Connexion Unraid</h2>
       <div class="fg"><label>IP du serveur</label><input v-model="cfg.UNRAID_HOST" class="inp" /></div>
       <div class="fg"><label>Port API</label><input v-model="cfg.UNRAID_API_PORT" class="inp" type="number" /></div>
+      <div class="fg"><label>Clé API</label><input v-model="cfg.UNRAID_API_KEY" class="inp" type="password" placeholder="Laisser vide pour ne pas modifier" /></div>
     </div>
     <div class="section"><h2>Scan réseau</h2>
       <div class="fg"><label>Plage Nmap</label><input v-model="cfg.nmap_range" class="inp" /></div>

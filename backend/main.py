@@ -35,6 +35,7 @@ async def lifespan(app: FastAPI):
                     "metrics_interval": str(settings.metrics_interval),
                     "UNRAID_HOST": settings.unraid_host,
                     "UNRAID_API_PORT": str(settings.unraid_api_port),
+                    "UNRAID_API_KEY": settings.unraid_api_key or "",
                 }
                 for k, v in defaults.items():
                     db.add(ConfigEntry(key=k, value=v))
