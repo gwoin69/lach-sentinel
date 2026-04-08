@@ -43,11 +43,7 @@ async def lifespan(app: FastAPI):
         finally:
             db.close()
 
-        monitor = UnraidMonitor(
-            host=settings.unraid_host,
-            api_key=settings.unraid_api_key,
-            api_port=settings.unraid_api_port,
-        )
+        monitor = UnraidMonitor()
         scanner = NmapScanner(network_range=settings.nmap_range)
         setup_scheduler(settings, SessionLocal, monitor, scanner, run_retention_job, ws_manager)
         scheduler.start()

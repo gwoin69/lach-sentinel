@@ -7,10 +7,12 @@ services:
       - "8888:8888"
     volumes:
       - ./data:/data
+      - /proc:/host_proc:ro
+      - /sys/class/thermal:/host_thermal:ro
+      - /usr/local/emhttp/state:/host_state:ro
+      - /mnt/user:/host_user:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - UNRAID_HOST=192.168.111.253
-      - UNRAID_API_PORT=7443
-      - UNRAID_API_KEY=${UNRAID_API_KEY}
       - NMAP_RANGE=192.168.111.0/24
       - NMAP_INTERVAL=3600
       - METRICS_INTERVAL=60

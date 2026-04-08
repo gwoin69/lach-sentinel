@@ -1,11 +1,10 @@
 import pytest
-from unittest.mock import patch
-from datetime import datetime, timezone
+from unittest.mock import patch, AsyncMock
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from backend.database import Base
 from backend.models import Metric
-from backend.modules.unraid_monitor import UnraidMonitor, UnraidData
+from backend.modules.unraid_monitor import UnraidMonitor
 
 
 @pytest.fixture
@@ -20,62 +19,52 @@ def session():
     s.close()
 
 
-MOCK_RESPONSE = {
-    "data": {
-        "info": {
-            "cpu": {"usage": 23.5},
-            "memory": {"used": 14680064000, "total": 34359738368},
-            "uptime": 1053840,
-            "temperature": {"cpu": 51.0},
-        },
-        "array": {
-            "state": "STARTED",
-            "capacity": {"kilobytes": {"used": 14298974208, "total": 21474836480}},
-            "parity": {"status": "VALID", "lastCheck": "2026-04-04T00:00:00Z"},
-        },
-        "docker": {
-            "containers": [
-                {"name": "nginx-proxy", "status": "running", "stats": {"cpu": 0.1, "memory": 12582912}},
-                {"name": "plex", "status": "stopped", "stats": {"cpu": 0.0, "memory": 0}},
-            ]
-        },
-        "vms": {
-            "domains": [
-                {"name": "Windows11", "status": "running", "vcpus": 4, "memory": 8589934592}
-            ]
-        },
-    }
-}
-
-
-@pytest.mark.asyncio
-async def test_fetch_parses_data():
-    monitor = UnraidMonitor(host="192.168.111.253", api_key="test", verify_ssl=False)
-    with patch.object(monitor, "_query", return_value=MOCK_RESPONSE):
-        data = await monitor.fetch()
-    assert data.cpu_usage == 23.5
-    assert data.ram_used_gb == pytest.approx(14680064000 / 1024 ** 3, rel=1e-3)
-    assert data.temp_cpu == 51.0
-    assert len(data.containers) == 2
-    assert len(data.vms) == 1
+MOCK_CONTAINERS = [
+    {"name": "nginx-proxy", "status": "running"},
+    {"name": "plex", "status": "exited"},
+]
 
 
 @pytest.mark.asyncio
 async def test_collect_writes_metrics(session):
-    monitor = UnraidMonitor(host="192.168.111.253", api_key="test", verify_ssl=False)
-    with patch.object(monitor, "_query", return_value=MOCK_RESPONSE):
-        await monitor.collect(session)
-    types = {m.type for m in session.query(Metric).all()}
-    assert "cpu" in types
-    assert "ram_used_gb" in types
-    assert "temp_cpu" in types
-    assert "containers" in types
-    assert "vms" in types
+    with (
+        patch("backend.modules.unraid_monitor._read_cpu_percent", return_value=23.5),
+        patch("backend.modules.unraid_monitor._read_meminfo",
+              return_value={"MemTotal": 16000000, "MemAvailable": 8000000}),
+        patch("backend.modules.unraid_monitor._read_cpu_temp", return_value=51.0),
+        patch("backend.modules.unraid_monitor._read_uptime", return_value=1053840.0),
+        patch("backend.modules.unraid_monitor._read_array_state", return_value="STARTED"),
+        patch("backend.modules.unraid_monitor._read_array_capacity", return_value=(8.5, 17.5)),
+        patch("backend.modules.unraid_monitor._get_containers",
+              new=AsyncMock(return_value=MOCK_CONTAINERS)),
+    ):
+        await UnraidMonitor().collect(session)
+
+    metrics = {m.type: m for m in session.query(Metric).all()}
+    assert "cpu" in metrics
+    assert metrics["cpu"].value == pytest.approx(23.5)
+    assert "ram_used_gb" in metrics
+    assert "temp_cpu" in metrics
+    assert metrics["temp_cpu"].value == pytest.approx(51.0)
+    assert "containers" in metrics
+    assert metrics["containers"].value == 2.0
+    assert "array_state" in metrics
+    assert metrics["array_state"].meta == "STARTED"
 
 
 @pytest.mark.asyncio
-async def test_collect_handles_connection_error(session):
-    monitor = UnraidMonitor(host="192.168.111.253", api_key="test", verify_ssl=False)
-    with patch.object(monitor, "_query", side_effect=Exception("Connection refused")):
-        await monitor.collect(session)  # must not raise
-    assert session.query(Metric).count() == 0
+async def test_collect_handles_read_errors(session):
+    """Toutes les lectures fichier échouent → metrics à zéro, pas d'exception."""
+    with (
+        patch("backend.modules.unraid_monitor._read_cpu_percent", return_value=0.0),
+        patch("backend.modules.unraid_monitor._read_meminfo", return_value={}),
+        patch("backend.modules.unraid_monitor._read_cpu_temp", return_value=0.0),
+        patch("backend.modules.unraid_monitor._read_uptime", return_value=0.0),
+        patch("backend.modules.unraid_monitor._read_array_state", return_value="unknown"),
+        patch("backend.modules.unraid_monitor._read_array_capacity", return_value=(0.0, 0.0)),
+        patch("backend.modules.unraid_monitor._get_containers",
+              new=AsyncMock(return_value=[])),
+    ):
+        await UnraidMonitor().collect(session)
+
+    assert session.query(Metric).count() > 0  # metrics écrites même avec valeurs nulles
